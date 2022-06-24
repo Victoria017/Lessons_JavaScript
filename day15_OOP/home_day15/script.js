@@ -10,7 +10,7 @@
 ■ метод, що обчислює довжину кола.
 Продемонструйте роботу властивостей і методів.
 */
-/*
+
 class Circle {
     #_radius = 0
 
@@ -78,7 +78,7 @@ console.log('new radius=', exampleCircle.radius);
 console.log('new diameter=', exampleCircle.diameter);
 console.log('new square=', exampleCircle.square);
 console.log('new length=', exampleCircle.length);
-*/
+
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -91,7 +91,7 @@ console.log('new length=', exampleCircle.length);
 ■ текстовий вміст; // text
 ■ масив атрибутів; // attributes
 ■ масив стилів; //styles
-■ масив вкладених таких самих тегів; // tags
+■ масив вкладених таких самих тегів; // children
 ■ метод встановлення атрибуту;
 ■ метод встановлення стилю;
 ■ метод додавання вкладеного елемента в кінець поточного 
@@ -104,22 +104,22 @@ HTML-код вкладених елементів.
 */
 
 class HtmlElement {
-    tag = '';
-    text = '';
-    attributes = {};
-    styles = {};
-    tags = [];
+    tag;
+    text;
+    attributes;
+    styles;
+    children;
 
-    constructor(tag, text, attributes, styles, tags) {
+    constructor(tag, text, attributes, styles, children) {
         this.tag = tag;
         this.text = text;
-        this.attributes = attributes;
-        this.styles = styles;
-        this.tags = tags;
+        this.attributes = attributes || {};
+        this.styles = styles || {};
+        this.children = children || [];
     }
 
     get isCloseTag() {
-        if(this.tag === 'br') {
+        if(this.tag === 'br' || this.tag === 'img') {
             return true;
         }
         return false;
@@ -137,39 +137,50 @@ class HtmlElement {
 
     // метод додавання вкладеного елемента в кінець елемента;
     appendTag(tag) {
-        this.tags.push(tag);
+        this.children.push(tag);
     }
 
     // метод додавання вкладеного елемента на початок поточного елемента;
     prependTag(tag) {
-        this.tags.unshift(tag);
+        this.children.unshift(tag);
     }
 
     get attributesStr() {
-        if(!this.attributes){
-            return '';
+        let attrsStr = '';
+
+        for(const attrName in this.attributes) {
+            attrsStr += ` ${attrName}="${this.attributes[attrName]}"`;
         }
-        return Object.keys(this.attributes).map((k) => {
-            return `${k}="${this.attributes[k]}"`;
-        }).join(' ');
+
+        return attrsStr;
     }
 
     get stylesStr() {
-        if(!this.styles){
-            return '';
+        let stylesStr = '';
+
+        for(const styleName in this.styles) {
+            stylesStr += `${styleName}: ${this.styles[styleName]}; `;
         }
-        return 'style="' + Object.keys(this.styles).map((k) => {
-            return `${k}: ${this.styles[k]};`;
-        }).join(' ') + '"';
+
+        return stylesStr ? `style="${stylesStr}"` : '';
     }
+
+    get childrenHtml() {
+        let childrenStr = '';
+        for (const child of this.children) {
+            childrenStr += child.getHtml();
+        }
+        return childrenStr;
+    }
+    
 
     // метод getHtml(), який повертає HTML-код у вигляді рядка, включаючи 
     // HTML-код вкладених елементів.
     getHtml() {
         if(this.isCloseTag) {
-            return `<${this.tag} />`;
+            return `<${this.tag} ${this.attributesStr} ${this.stylesStr} />`;
         }
-        return `<${this.tag} ${this.attributesStr} ${this.stylesStr}>${this.text}</${this.tag}>`;
+        return `<${this.tag} ${this.attributesStr} ${this.stylesStr}>${this.text}${this.childrenHtml}</${this.tag}>`;
     }
 }
 
@@ -259,10 +270,10 @@ write()
 */
 
 class HtmlBlock {
-    cssClasses = [];
+    cssClasses;
     htmlElement;
     constructor(cssClasses, htmlElement) {
-        this.cssClasses = cssClasses;
+        this.cssClasses = cssClasses || [];
         this.htmlElement = htmlElement;
     }
 
@@ -301,7 +312,18 @@ const class5 = new CssClass("text", {'text-align': 'justify'});
 //class5.setStyle('text-align', 'justify');
 console.log(class5.getCss());
 
-const wrapperElement = new HtmlElement("div", 'test text', {id: 'wrapper'}, {color: 'green'});
+const text1 = `Lorem ipsum, dolor sit amet consectetur adipisicing elit. Alias asperiores temporibus obcaecati, nisi saepe reiciendis
+tempore cupiditate iste, ratione beatae aut unde, natus possimus eligendi nulla voluptatum enim nam aliquid explicabo
+necessitatibus! Omnis quae perferendis earum aperiam saepe dolorum pariatur minus non illo ipsum, maiores dolorem enim
+nulla fuga laborum?`;
+
+const a1 = new HtmlElement('a', 'More...', {href: 'http://www.lipsum.com/', target: '_blank'})
+const p1 = new HtmlElement('p', text1, {class: 'text'}, {}, [a1]);
+const img1 = new HtmlElement('img', '', {src: 'lipsum.jpg', alt: 'Lorem Ipsum'});
+const h3_1 = new HtmlElement('h3', 'What is Lorem Ipsum?');
+const div1 = new HtmlElement("div", '', {class: 'block'}, {}, [h3_1, img1, p1]);
+
+const wrapperElement = new HtmlElement("div", '', {id: 'wrapper'}, {}, [div1, div1]);
 
 
 const block = new HtmlBlock(
@@ -310,8 +332,6 @@ const block = new HtmlBlock(
 );
 
 document.write(block.getCode());
-//let text = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam molestias possimus beatae quas, velit quod corporis    consequatur saepe odio culpa expedita? Accusantium, impedit! Suscipit delectus culpa hic provident. Voluptas, officiis.  ";
-
 
 
 
